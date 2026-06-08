@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Zoom Attendance Analyzer — AI-Powered Attendance Tracking</title>
+  <meta name="description" content="Complete AI-powered Zoom attendance analysis system with fuzzy matching, ML predictions, and downloadable reports." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.0/css/all.min.css" />
+  <style>
+    /* ── Reset & base ────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --navy:   #1a252f;
+      --dark:   #2c3e50;
+      --blue:   #3498db;
+      --blue2:  #2980b9;
+      --green:  #2ecc71;
+      --yellow: #f39c12;
+      --red:    #e74c3c;
+      --light:  #ecf0f1;
+      --muted:  #7f8c8d;
+      --white:  #ffffff;
+      --radius: 14px;
+      --shadow: 0 4px 24px rgba(0,0,0,.10);
+      --shadow-lg: 0 12px 40px rgba(0,0,0,.15);
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f4f6f9;
+      color: var(--dark);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+    a { color: var(--blue); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    img { max-width: 100%; }
+    code, pre { font-family: 'JetBrains Mono', monospace; }
+
+    /* ── Navbar ──────────────────────────────────────────────── */
+    .navbar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+      background: rgba(26,37,47,.95);
+      backdrop-filter: blur(12px);
+      padding: 0 2rem;
+      height: 64px;
+      display: flex; align-items: center; justify-content: space-between;
+      box-shadow: 0 2px 12px rgba(0,0,0,.3);
+    }
+    .nav-brand {
+      display: flex; align-items: center; gap: .6rem;
+      font-weight: 800; font-size: 1.1rem; color: var(--white);
+    }
+    .nav-brand span.emoji { font-size: 1.5rem; }
+    .nav-links { display: flex; gap: 1.8rem; list-style: none; }
+    .nav-links a { color: #bdc3c7; font-size: .88rem; font-weight: 500; transition: color .2s; }
+    .nav-links a:hover { color: var(--white); text-decoration: none; }
+    .nav-cta {
+      background: var(--blue); color: var(--white) !important;
+      padding: .4rem 1.1rem; border-radius: 30px; font-weight: 600 !important;
+      transition: background .2s !important;
+    }
+    .nav-cta:hover { background: var(--blue2) !important; text-decoration: none !important; }
+
+    /* ── Hero ────────────────────────────────────────────────── */
+    .hero {
+      min-height: 100vh;
+      background: linear-gradient(135deg, var(--navy) 0%, #154360 50%, #1a5276 100%);
+      display: flex; align-items: center; justify-content: center;
+      text-align: center; padding: 6rem 1.5rem 3rem;
+      position: relative; overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='30' cy='30' r='1.5' fill='rgba(255,255,255,.08)'/%3E%3C/svg%3E");
+    }
+    .hero-content { position: relative; max-width: 860px; }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: .5rem;
+      background: rgba(52,152,219,.2); border: 1px solid rgba(52,152,219,.4);
+      color: #85c1e9; font-size: .8rem; font-weight: 600;
+      padding: .35rem 1rem; border-radius: 30px; margin-bottom: 1.5rem;
+      letter-spacing: .04em;
+    }
+    .hero h1 {
+      font-size: clamp(2.2rem, 5vw, 3.8rem);
+      font-weight: 900; color: var(--white);
+      line-height: 1.15; margin-bottom: 1.2rem;
+    }
+    .hero h1 .accent { color: #5dade2; }
+    .hero p {
+      font-size: 1.15rem; color: #a9cce3; max-width: 640px; margin: 0 auto 2.5rem;
+    }
+    .hero-btns { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+    .btn {
+      display: inline-flex; align-items: center; gap: .5rem;
+      padding: .75rem 1.8rem; border-radius: 8px;
+      font-weight: 700; font-size: .95rem; transition: all .2s; cursor: pointer;
+      border: none;
+    }
+    .btn-primary {
+      background: var(--blue); color: var(--white);
+      box-shadow: 0 4px 16px rgba(52,152,219,.4);
+    }
+    .btn-primary:hover { background: var(--blue2); transform: translateY(-2px); text-decoration: none; color: var(--white); }
+    .btn-outline {
+      background: transparent; color: var(--white);
+      border: 2px solid rgba(255,255,255,.4);
+    }
+    .btn-outline:hover { border-color: var(--white); background: rgba(255,255,255,.08); text-decoration: none; color: var(--white); }
+    .hero-stats {
+      margin-top: 3.5rem;
+      display: flex; gap: 2.5rem; justify-content: center; flex-wrap: wrap;
+    }
+    .hero-stat { text-align: center; }
+    .hero-stat .num { font-size: 2rem; font-weight: 800; color: var(--white); }
+    .hero-stat .lbl { font-size: .78rem; color: #7fb3d3; font-weight: 500; }
+
+    /* ── Section generic ─────────────────────────────────────── */
+    section { padding: 5rem 1.5rem; }
+    .container { max-width: 1140px; margin: 0 auto; }
+    .section-label {
+      text-align: center; text-transform: uppercase; font-size: .75rem;
+      font-weight: 700; letter-spacing: .1em; color: var(--blue); margin-bottom: .6rem;
+    }
+    .section-title {
+      text-align: center; font-size: clamp(1.6rem, 3vw, 2.4rem);
+      font-weight: 800; color: var(--dark); margin-bottom: .8rem;
+    }
+    .section-sub {
+      text-align: center; color: var(--muted); font-size: 1.02rem;
+      max-width: 620px; margin: 0 auto 3.5rem;
+    }
+
+    /* ── Features grid ───────────────────────────────────────── */
+    #features { background: var(--white); }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.6rem;
+    }
+    .feat-card {
+      background: #f8fafc;
+      border: 1px solid #e8edf2;
+      border-radius: var(--radius);
+      padding: 1.8rem;
+      transition: transform .25s, box-shadow .25s;
+    }
+    .feat-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-lg); }
+    .feat-icon {
+      width: 52px; height: 52px;
+      background: linear-gradient(135deg, #ebf5fb, #d6eaf8);
+      border-radius: 12px; display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem; margin-bottom: 1rem;
+    }
+    .feat-card h3 { font-size: 1rem; font-weight: 700; color: var(--dark); margin-bottom: .5rem; }
+    .feat-card p  { font-size: .88rem; color: var(--muted); line-height: 1.55; }
+
+    /* ── How it works ────────────────────────────────────────── */
+    #how-it-works { background: #f4f6f9; }
+    .steps { display: flex; flex-direction: column; gap: 2.5rem; max-width: 780px; margin: 0 auto; }
+    .step  { display: flex; gap: 1.5rem; align-items: flex-start; }
+    .step-num {
+      min-width: 48px; height: 48px;
+      background: linear-gradient(135deg, var(--blue), var(--blue2));
+      color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 1.1rem; flex-shrink: 0;
+    }
+    .step-body h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: .35rem; color: var(--dark); }
+    .step-body p  { font-size: .9rem; color: var(--muted); }
+
+    /* ── Architecture ────────────────────────────────────────── */
+    #architecture { background: var(--white); }
+    .arch-code {
+      background: var(--navy); border-radius: var(--radius);
+      padding: 2rem 2.2rem; overflow-x: auto;
+      box-shadow: var(--shadow-lg);
+      border: 1px solid rgba(255,255,255,.05);
+    }
+    .arch-code pre { color: #a9d7f5; font-size: .82rem; line-height: 1.8; }
+    .arch-code .dir  { color: #5dade2; font-weight: 600; }
+    .arch-code .file { color: #a9cce3; }
+    .arch-code .cmt  { color: #5d7c8e; }
+
+    /* ── ML Module ───────────────────────────────────────────── */
+    #ml { background: linear-gradient(135deg, #1a252f, #154360); }
+    #ml .section-label { color: #5dade2; }
+    #ml .section-title { color: var(--white); }
+    #ml .section-sub   { color: #a9cce3; }
+    .ml-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.4rem; }
+    .ml-card {
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: var(--radius); padding: 1.6rem;
+      transition: background .25s;
+    }
+    .ml-card:hover { background: rgba(255,255,255,.1); }
+    .ml-card .ml-icon { font-size: 2rem; margin-bottom: .8rem; }
+    .ml-card h3 { font-size: .98rem; font-weight: 700; color: var(--white); margin-bottom: .4rem; }
+    .ml-card p  { font-size: .84rem; color: #85c1e9; line-height: 1.55; }
+
+    /* ── Risk bands ──────────────────────────────────────────── */
+    #risk { background: #f4f6f9; }
+    .risk-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.4rem; }
+    .risk-card {
+      border-radius: var(--radius); padding: 1.8rem; text-align: center;
+      border-top: 5px solid; box-shadow: var(--shadow);
+    }
+    .risk-green  { background: #eafaf1; border-color: var(--green); }
+    .risk-yellow { background: #fef9e7; border-color: var(--yellow); }
+    .risk-red    { background: #fdedec; border-color: var(--red); }
+    .risk-card .badge {
+      display: inline-block; padding: .3rem .9rem; border-radius: 20px;
+      font-size: .78rem; font-weight: 700; margin-bottom: .8rem;
+    }
+    .risk-green  .badge { background: var(--green);  color: white; }
+    .risk-yellow .badge { background: var(--yellow); color: white; }
+    .risk-red    .badge { background: var(--red);    color: white; }
+    .risk-card .pct { font-size: 2.4rem; font-weight: 900; margin-bottom: .3rem; }
+    .risk-green  .pct { color: #1e8449; }
+    .risk-yellow .pct { color: #b7770d; }
+    .risk-red    .pct { color: #c0392b; }
+    .risk-card p { font-size: .87rem; color: var(--muted); }
+
+    /* ── Tech stack ──────────────────────────────────────────── */
+    #stack { background: var(--white); }
+    .stack-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 1rem; }
+    .stack-pill {
+      border-radius: 10px; background: #f0f4f8;
+      border: 1px solid #dde2e8; padding: 1rem;
+      text-align: center; transition: transform .2s, box-shadow .2s;
+    }
+    .stack-pill:hover { transform: translateY(-4px); box-shadow: var(--shadow); }
+    .stack-pill .icon { font-size: 2rem; margin-bottom: .5rem; }
+    .stack-pill .name { font-size: .8rem; font-weight: 700; color: var(--dark); }
+    .stack-pill .ver  { font-size: .7rem; color: var(--muted); }
+
+    /* ── Setup ───────────────────────────────────────────────── */
+    #setup { background: var(--navy); }
+    #setup .section-title { color: var(--white); }
+    #setup .section-sub   { color: #a9cce3; }
+    .setup-steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.4rem; }
+    .setup-card {
+      background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.08);
+      border-radius: var(--radius); padding: 1.5rem;
+    }
+    .setup-card h4 { color: #85c1e9; font-size: .9rem; font-weight: 700; margin-bottom: .8rem; }
+    .setup-card pre {
+      background: rgba(0,0,0,.35); border-radius: 8px;
+      padding: .9rem 1rem; overflow-x: auto;
+      font-size: .78rem; color: #a9d7f5; line-height: 1.7;
+    }
+
+    /* ── Footer ──────────────────────────────────────────────── */
+    footer {
+      background: var(--navy); color: #7f8c8d;
+      text-align: center; padding: 2rem 1.5rem; font-size: .83rem;
+      border-top: 1px solid rgba(255,255,255,.06);
+    }
+
+    /* ── Animations ──────────────────────────────────────────── */
+    .fade-up {
+      opacity: 0; transform: translateY(28px);
+      transition: opacity .6s ease, transform .6s ease;
+    }
+    .fade-up.visible { opacity: 1; transform: translateY(0); }
+
+    /* ── Responsive ──────────────────────────────────────────── */
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .hero h1 { font-size: 2rem; }
+      .hero-stats { gap: 1.5rem; }
+      .risk-grid { grid-template-columns: 1fr; }
+      .step { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Navbar ──────────────────────────────────────────────────── -->
+<nav class="navbar">
+  <div class="nav-brand">
+    <span class="emoji">🎓</span>
+    <span>Zoom Attendance Analyzer</span>
+  </div>
+  <ul class="nav-links">
+    <li><a href="#features">Features</a></li>
+    <li><a href="#how-it-works">How It Works</a></li>
+    <li><a href="#ml">ML Module</a></li>
+    <li><a href="#architecture">Architecture</a></li>
+    <li><a href="#setup">Setup</a></li>
+    <li><a href="#setup" class="nav-cta">Get Started</a></li>
+  </ul>
+</nav>
+
+<!-- ── Hero ────────────────────────────────────────────────────── -->
+<section class="hero" id="home">
+  <div class="hero-content">
+    <div class="hero-badge">
+      <i class="fas fa-robot"></i>
+      AI-Powered • Production-Ready • Open Source
+    </div>
+    <h1>
+      Intelligent Zoom<br />
+      <span class="accent">Attendance Analyzer</span>
+    </h1>
+    <p>
+      Automatically parse Zoom participant reports, match student names using
+      fuzzy algorithms, track attendance history, predict risk levels with
+      Machine Learning, and generate formatted reports — all in one tool.
+    </p>
+    <div class="hero-btns">
+      <a href="#setup" class="btn btn-primary">
+        <i class="fas fa-rocket"></i> Get Started Free
+      </a>
+      <a href="#features" class="btn btn-outline">
+        <i class="fas fa-play-circle"></i> See Features
+      </a>
+    </div>
+    <div class="hero-stats">
+      <div class="hero-stat"><div class="num">7</div><div class="lbl">App Pages</div></div>
+      <div class="hero-stat"><div class="num">3</div><div class="lbl">ML Models</div></div>
+      <div class="hero-stat"><div class="num">10+</div><div class="lbl">Chart Types</div></div>
+      <div class="hero-stat"><div class="num">3</div><div class="lbl">Export Formats</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Features ────────────────────────────────────────────────── -->
+<section id="features">
+  <div class="container">
+    <div class="section-label">Core Features</div>
+    <h2 class="section-title">Everything you need for attendance management</h2>
+    <p class="section-sub">From raw Zoom CSVs to beautiful reports and ML predictions — fully automated.</p>
+    <div class="features-grid">
+
+      <div class="feat-card fade-up">
+        <div class="feat-icon">🔍</div>
+        <h3>Intelligent Name Matching</h3>
+        <p>Roll-number priority matching, RapidFuzz token-sort ratio, and Levenshtein distance ensure accurate student identification regardless of name format, case, or typos.</p>
+      </div>
+
+      <div class="feat-card fade-up">
+        <div class="feat-icon">⏱️</div>
+        <h3>Multi-Session Merge</h3>
+        <p>Students who leave and rejoin are automatically detected. All sessions are merged and total duration is summed before marking Present or Absent.</p>
+      </div>
+
+      <div class="feat-card fade-up">
+        <div class="feat-icon">🎛️</div>
+        <h3>Dynamic Thresholds</h3>
+        <p>Adjust the minimum required duration (e.g., 45 minutes) and risk thresholds directly from the UI sidebar — no code changes needed.</p>
+      </div>
+
+      <div class="feat-card fade-up">
+        <div class="feat-icon">📊</div>
+        <h3>Rich Analytics Dashboard</h3>
+        <p>Interactive Plotly charts: pie, bar, histogram, heatmap, gauge, monthly trend lines, top/low performers, and risk breakdowns.</p>
+      </div>
+
+      <div class="feat-card fade-up">
+        <div class="feat-icon">🤖</div>
+        <h3>ML Risk Predictions</h3>
+        <p>Random Forest classifies each student as Green/Yellow/Red. Gradient Boosting forecasts future class attendance %. Isolation Forest detects sudden drops.</p>
+      </div>
+
+      <div class="feat-card fade-up">
+        <div class="feat-icon">📄</div>
+        <h3>Multi-format Reports</h3>
+        <p>Download attendance reports as CSV, multi-sheet colour-coded Excel workbooks, or formatted PDF documents with summaries and tables.</p>
+      </div>
+
+      <div class="feat-card fade-up">
+        <div class="feat-icon">🗄️</div>
+        <h3>Persistent SQLite Storage</h3>
+        <p>All data is stored in a local SQLite database. Historical attendance is maintained across sessions with full CRUD operations.</p>
+      </div>
+
+      <div class="feat-card fade-up">
+        <div class="feat-icon">🧹</div>
+        <h3>Smart Data Cleaning</h3>
+        <p>Automatically handles encoding issues, extra spaces, special characters, duplicate entries, inconsistent capitalization, and metadata headers in Zoom exports.</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ── How It Works ─────────────────────────────────────────────── -->
+<section id="how-it-works">
+  <div class="container">
+    <div class="section-label">Workflow</div>
+    <h2 class="section-title">How It Works</h2>
+    <p class="section-sub">Three simple steps from upload to insights.</p>
+    <div class="steps">
+
+      <div class="step fade-up">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>Upload Master Student List</h3>
+          <p>Upload a CSV or Excel file with student roll numbers and names. The system normalises names, removes duplicates, and stores the roster permanently. Supported column variants are auto-detected.</p>
+        </div>
+      </div>
+
+      <div class="step fade-up">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>Upload Zoom Participant Report</h3>
+          <p>After each Zoom class, export the participant report and upload it. The system automatically detects columns, cleans names, extracts roll numbers from display names, merges multi-session entries, and matches each participant to the master list using a 4-tier matching pipeline.</p>
+        </div>
+      </div>
+
+      <div class="step fade-up">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>View Analytics, ML Predictions & Reports</h3>
+          <p>Explore the dashboard for attendance trends, risk levels, and student-wise analytics. Run ML models to get next-class attendance predictions and at-risk student alerts. Download reports in CSV, Excel, or PDF.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ── Architecture ─────────────────────────────────────────────── -->
+<section id="architecture">
+  <div class="container">
+    <div class="section-label">Project Structure</div>
+    <h2 class="section-title">Modular Architecture</h2>
+    <p class="section-sub">Clean separation of concerns — each module handles one responsibility.</p>
+    <div class="arch-code fade-up">
+      <pre><span class="dir">zoom_analyzer/</span>
+│
+├── <span class="file">app.py</span>                       <span class="cmt"># Streamlit entry point + homepage</span>
+├── <span class="file">config.py</span>                    <span class="cmt"># All constants, thresholds, paths</span>
+├── <span class="file">requirements.txt</span>             <span class="cmt"># Python dependencies</span>
+├── <span class="file">generate_sample_data.py</span>      <span class="cmt"># Creates 50-student roster + 5 Zoom CSVs</span>
+├── <span class="file">setup.sh</span> / <span class="file">setup.bat</span>         <span class="cmt"># One-command setup scripts</span>
+│
+├── <span class="dir">modules/</span>
+│   ├── <span class="file">preprocessor.py</span>          <span class="cmt"># CSV/Excel loading, name normalisation</span>
+│   ├── <span class="file">matcher.py</span>               <span class="cmt"># Roll-exact → Name-exact → RapidFuzz → Levenshtein</span>
+│   ├── <span class="file">attendance_calculator.py</span> <span class="cmt"># Session merge, mark Present/Absent, cumulative stats</span>
+│   ├── <span class="file">analytics.py</span>             <span class="cmt"># All 10 Plotly figure builders</span>
+│   ├── <span class="file">ml_predictor.py</span>          <span class="cmt"># RandomForest + GradientBoosting + IsolationForest</span>
+│   ├── <span class="file">report_generator.py</span>      <span class="cmt"># CSV / colour-Excel / PDF generation</span>
+│   └── <span class="file">database.py</span>              <span class="cmt"># SQLite schema, CRUD, backup utilities</span>
+│
+├── <span class="dir">pages/</span>                        <span class="cmt"># Streamlit multi-page navigation</span>
+│   ├── <span class="file">01_Upload_Master_List.py</span>
+│   ├── <span class="file">02_Upload_Zoom_Attendance.py</span>
+│   ├── <span class="file">03_Attendance_Records.py</span>
+│   ├── <span class="file">04_Analytics.py</span>
+│   ├── <span class="file">05_ML_Predictions.py</span>
+│   ├── <span class="file">06_Reports.py</span>
+│   └── <span class="file">07_Settings.py</span>
+│
+├── <span class="dir">data/</span>
+│   ├── <span class="dir">database/</span> attendance.db    <span class="cmt"># SQLite persistent store</span>
+│   └── <span class="dir">reports/</span>                  <span class="cmt"># Generated report files</span>
+│
+└── <span class="dir">sample_data/</span>
+    ├── <span class="file">sample_master_list.csv</span>   <span class="cmt"># 50 students</span>
+    └── <span class="file">sample_zoom_class*.csv</span>   <span class="cmt"># 5 realistic Zoom sessions</span></pre>
+    </div>
+  </div>
+</section>
+
+<!-- ── ML Section ───────────────────────────────────────────────── -->
+<section id="ml">
+  <div class="container">
+    <div class="section-label">Machine Learning</div>
+    <h2 class="section-title">AI-Powered Risk Intelligence</h2>
+    <p class="section-sub">Three complementary ML models working together to predict, forecast, and detect anomalies.</p>
+    <div class="ml-grid">
+
+      <div class="ml-card fade-up">
+        <div class="ml-icon">🌲</div>
+        <h3>Random Forest Classifier</h3>
+        <p>Classifies each student into Green / Yellow / Red risk based on 9 engineered features: rolling attendance average, streak counts, trend slope, avg duration, and more.</p>
+      </div>
+
+      <div class="ml-card fade-up">
+        <div class="ml-icon">📈</div>
+        <h3>Gradient Boosting Regressor</h3>
+        <p>Auto-regressive forecasting of class-level attendance percentages. Predicts the next 3 upcoming sessions using rolling window features and trend slope.</p>
+      </div>
+
+      <div class="ml-card fade-up">
+        <div class="ml-icon">🔎</div>
+        <h3>Isolation Forest</h3>
+        <p>Unsupervised anomaly detection identifies students whose recent attendance deviates sharply from their own baseline — catching sudden attendance drops early.</p>
+      </div>
+
+      <div class="ml-card fade-up">
+        <div class="ml-icon">⚙️</div>
+        <h3>Feature Engineering</h3>
+        <p>9 features: overall attendance %, last-N rolling average, trend slope, consecutive streaks (present &amp; absent), average/std duration, day-of-week pattern.</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ── Risk Bands ───────────────────────────────────────────────── -->
+<section id="risk">
+  <div class="container">
+    <div class="section-label">Risk Classification</div>
+    <h2 class="section-title">Three-Tier Risk System</h2>
+    <p class="section-sub">Configurable thresholds let you define what "safe", "at-risk", and "critical" means for your course.</p>
+    <div class="risk-grid">
+      <div class="risk-card risk-green fade-up">
+        <div class="badge">🟢 GREEN</div>
+        <div class="pct">≥ 75%</div>
+        <h3 style="color:#1e8449; margin-bottom:.5rem;">Safe</h3>
+        <p>Student is attending regularly. No immediate action required. Keep up the good work!</p>
+      </div>
+      <div class="risk-card risk-yellow fade-up">
+        <div class="badge">🟡 YELLOW</div>
+        <div class="pct">50–74%</div>
+        <h3 style="color:#b7770d; margin-bottom:.5rem;">At Risk</h3>
+        <p>Attendance is slipping. Send a reminder or schedule a check-in with the student.</p>
+      </div>
+      <div class="risk-card risk-red fade-up">
+        <div class="badge">🔴 RED</div>
+        <div class="pct">&lt; 50%</div>
+        <h3 style="color:#c0392b; margin-bottom:.5rem;">Critical</h3>
+        <p>Student may fail the course. Immediate intervention — contact student and/or guardian.</p>
+      </div>
+    </div>
+    <p style="text-align:center; margin-top:2rem; color:var(--muted); font-size:.88rem;">
+      All thresholds are adjustable per-session via the UI sidebar or permanently in <code>config.py</code>.
+    </p>
+  </div>
+</section>
+
+<!-- ── Tech Stack ───────────────────────────────────────────────── -->
+<section id="stack">
+  <div class="container">
+    <div class="section-label">Technology</div>
+    <h2 class="section-title">Built With Modern Python</h2>
+    <p class="section-sub">Production-grade libraries for data science, ML, and web applications.</p>
+    <div class="stack-grid">
+      <div class="stack-pill fade-up"><div class="icon">🐍</div><div class="name">Python</div><div class="ver">3.11+</div></div>
+      <div class="stack-pill fade-up"><div class="icon">🌊</div><div class="name">Streamlit</div><div class="ver">1.32</div></div>
+      <div class="stack-pill fade-up"><div class="icon">🐼</div><div class="name">Pandas</div><div class="ver">2.2</div></div>
+      <div class="stack-pill fade-up"><div class="icon">🔢</div><div class="name">NumPy</div><div class="ver">1.26</div></div>
+      <div class="stack-pill fade-up"><div class="icon">🤖</div><div class="name">Scikit-Learn</div><div class="ver">1.4</div></div>
+      <div class="stack-pill fade-up"><div class="icon">🔍</div><div class="name">RapidFuzz</div><div class="ver">3.7</div></div>
+      <div class="stack-pill fade-up"><div class="icon">📊</div><div class="name">Plotly</div><div class="ver">5.20</div></div>
+      <div class="stack-pill fade-up"><div class="icon">🗄️</div><div class="name">SQLite</div><div class="ver">Built-in</div></div>
+      <div class="stack-pill fade-up"><div class="icon">📗</div><div class="name">OpenPyXL</div><div class="ver">3.1</div></div>
+      <div class="stack-pill fade-up"><div class="icon">📄</div><div class="name">fpdf2</div><div class="ver">2.7</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Setup ────────────────────────────────────────────────────── -->
+<section id="setup">
+  <div class="container">
+    <div class="section-label" style="color:#5dade2;">Quick Start</div>
+    <h2 class="section-title">Up and running in 3 commands</h2>
+    <p class="section-sub">Works on Windows, macOS, and Linux with Python 3.11+</p>
+    <div class="setup-steps">
+
+      <div class="setup-card fade-up">
+        <h4><i class="fas fa-download"></i> &nbsp;1. Clone & Navigate</h4>
+        <pre>git clone https://github.com/your-repo/zoom-analyzer.git
+cd zoom-analyzer/zoom_analyzer</pre>
+      </div>
+
+      <div class="setup-card fade-up">
+        <h4><i class="fas fa-cogs"></i> &nbsp;2. Install Dependencies</h4>
+        <pre># Linux / macOS
+chmod +x setup.sh && ./setup.sh
+
+# Windows
+setup.bat
+
+# Or manually:
+pip install -r requirements.txt</pre>
+      </div>
+
+      <div class="setup-card fade-up">
+        <h4><i class="fas fa-play"></i> &nbsp;3. Launch Application</h4>
+        <pre>streamlit run app.py
+
+# App opens at:
+http://localhost:8501</pre>
+      </div>
+
+    </div>
+
+    <!-- Feature checklist -->
+    <div style="margin-top:3rem; background:rgba(255,255,255,.04); border-radius:var(--radius); padding:2rem; border:1px solid rgba(255,255,255,.08);">
+      <h3 style="color:var(--white); margin-bottom:1.2rem; text-align:center;">What you get out of the box</h3>
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:.7rem;">
+        <div style="color:#a9cce3; font-size:.88rem;"><i class="fas fa-check" style="color:var(--green); margin-right:.5rem;"></i>50-student sample roster</div>
+        <div style="color:#a9cce3; font-size:.88rem;"><i class="fas fa-check" style="color:var(--green); margin-right:.5rem;"></i>5 pre-generated Zoom CSVs</div>
+        <div style="color:#a9cce3; font-size:.88rem;"><i class="fas fa-check" style="color:var(--green); margin-right:.5rem;"></i>Full SQLite database</div>
+        <div style="color:#a9cce3; font-size:.88rem;"><i class="fas fa-check" style="color:var(--green); margin-right:.5rem;"></i>All chart types working</div>
+        <div style="color:#a9cce3; font-size:.88rem;"><i class="fas fa-check" style="color:var(--green); margin-right:.5rem;"></i>ML models pre-configured</div>
+        <div style="color:#a9cce3; font-size:.88rem;"><i class="fas fa-check" style="color:var(--green); margin-right:.5rem;"></i>CSV / Excel / PDF export</div>
+        <div style="color:#a9cce3; font-size:.88rem;"><i class="fas fa-check" style="color:var(--green); margin-right:.5rem;"></i>Configurable thresholds</div>
+        <div style="color:#a9cce3; font-size:.88rem;"><i class="fas fa-check" style="color:var(--green); margin-right:.5rem;"></i>Dark sidebar theme</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Footer ───────────────────────────────────────────────────── -->
+<footer>
+  <p>🎓 <strong>Zoom Attendance Analyzer</strong> &nbsp;|&nbsp; Built with Python, Streamlit &amp; ❤️</p>
+  <p style="margin-top:.5rem; font-size:.78rem;">
+    Python · Pandas · NumPy · Scikit-Learn · RapidFuzz · Plotly · SQLite · fpdf2 · openpyxl
+  </p>
+</footer>
+
+<!-- ── Scroll animation ──────────────────────────────────────────── -->
+<script>
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.12 });
+  document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+</script>
+
+</body>
+</html>
