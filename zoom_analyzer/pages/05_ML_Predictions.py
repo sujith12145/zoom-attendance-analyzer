@@ -17,6 +17,10 @@ from config import COLOR_GREEN, COLOR_YELLOW, COLOR_RED
 
 
 def render():
+    from modules.auth import check_authentication
+    if not check_authentication():
+        st.stop()
+
     st.title("🤖 ML Predictions & Risk Analysis")
     st.markdown("Uses **Random Forest**, **Gradient Boosting**, and **Isolation Forest** to predict "
                 "attendance trends and identify at-risk students.")

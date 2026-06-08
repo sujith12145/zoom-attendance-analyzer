@@ -18,6 +18,10 @@ from config import DEFAULT_GREEN_THRESHOLD, DEFAULT_YELLOW_THRESHOLD
 
 
 def render():
+    from modules.auth import check_authentication
+    if not check_authentication():
+        st.stop()
+
     st.title("📊 Attendance Records")
 
     history_df = load_full_history()

@@ -14,6 +14,10 @@ from modules.database     import save_master_list, load_master_list_db, master_l
 
 
 def render():
+    from modules.auth import check_authentication
+    if not check_authentication():
+        st.stop()
+
     st.title("📋 Master Student List")
     st.markdown("Upload your student roster once. It will be stored permanently and used for all future attendance sessions.")
 

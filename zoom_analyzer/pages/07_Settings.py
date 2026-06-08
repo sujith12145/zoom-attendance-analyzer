@@ -19,6 +19,10 @@ from config import (
 
 
 def render():
+    from modules.auth import check_authentication
+    if not check_authentication():
+        st.stop()
+
     st.title("⚙️ Settings")
 
     # ── App info ───────────────────────────────────────────────────────────

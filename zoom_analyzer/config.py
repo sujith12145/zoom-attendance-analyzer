@@ -63,3 +63,11 @@ COLOR_RED    = "#e74c3c"
 COLOR_BLUE   = "#3498db"
 COLOR_DARK   = "#2c3e50"
 COLOR_LIGHT  = "#ecf0f1"
+
+# ─── SMTP Server Configuration for OTP Emails (Optional) ─────────────────────
+SMTP_SERVER   = os.environ.get("SMTP_SERVER", "")
+SMTP_PORT     = int(os.environ.get("SMTP_PORT", "587"))
+SMTP_USER     = os.environ.get("SMTP_USER", "")
+SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD", "")
+SMTP_FROM     = os.environ.get("SMTP_FROM", "noreply@zoomattendance.com")
+

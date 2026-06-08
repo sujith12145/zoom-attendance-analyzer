@@ -20,6 +20,10 @@ from config import DEFAULT_MIN_DURATION_MINUTES, FUZZY_SCORE_CUTOFF
 
 
 def render():
+    from modules.auth import check_authentication
+    if not check_authentication():
+        st.stop()
+
     st.title("📤 Upload Zoom Attendance")
     st.markdown("Upload the participant report downloaded from Zoom after each class.")
 

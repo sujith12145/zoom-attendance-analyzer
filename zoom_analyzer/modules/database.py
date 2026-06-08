@@ -52,6 +52,14 @@ CREATE TABLE IF NOT EXISTS attendance (
     UNIQUE (class_id, roll_number)
 );
 
+CREATE TABLE IF NOT EXISTS users (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    name        TEXT NOT NULL,
+    email       TEXT UNIQUE NOT NULL,
+    password    TEXT NOT NULL,
+    created_at  TEXT DEFAULT (datetime('now'))
+);
+
 CREATE INDEX IF NOT EXISTS idx_att_roll  ON attendance(roll_number);
 CREATE INDEX IF NOT EXISTS idx_att_class ON attendance(class_id);
 """
@@ -228,6 +236,35 @@ def get_attendance_summary() -> dict:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# User CRUD helpers
+# ─────────────────────────────────────────────────────────────────────────────
+
+def create_user(name: str, email: str, password_hash: str) -> bool:
+    """Insert a new user. Return True if successful, False if email already exists."""
+    try:
+        with _get_conn() as conn:
+            conn.execute(
+                "INSERT INTO users (name, email, password) VALUES (?, ?, ?)",
+                (name.strip(), email.strip().lower(), password_hash)
+            )
+            return True
+    except sqlite3.IntegrityError:
+        return False
+
+
+def get_user_by_email(email: str) -> dict | None:
+    """Retrieve user details by email."""
+    with _get_conn() as conn:
+        row = conn.execute(
+            "SELECT id, name, email, password, created_at FROM users WHERE LOWER(email) = LOWER(?)",
+            (email.strip(),)
+        ).fetchone()
+        if row:
+            return dict(row)
+        return None
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Backup helpers
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -245,5 +282,7 @@ def reset_database() -> None:
             DROP TABLE IF EXISTS attendance;
             DROP TABLE IF EXISTS classes;
             DROP TABLE IF EXISTS master_students;
+            DROP TABLE IF EXISTS users;
         """)
         conn.executescript(DDL)
+

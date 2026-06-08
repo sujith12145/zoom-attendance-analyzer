@@ -28,6 +28,10 @@ st.set_page_config(
     },
 )
 
+# ── Authentication Check ───────────────────────────────────────────────────
+from modules.auth import check_authentication
+check_authentication()
+
 # ── Global CSS ──────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
@@ -105,6 +109,20 @@ with st.sidebar:
         <div style="font-size:0.75rem; color:#95a5a6;">v{APP_VERSION}</div>
     </div>
     """, unsafe_allow_html=True)
+
+    st.divider()
+
+    # User profile & logout button
+    st.markdown(f"""
+    <div style="text-align:center; margin-bottom:10px;">
+        <span style="font-size:0.85rem; color:#bdc3c7;">Logged in as:</span><br/>
+        <strong style="color:#ffffff;">{st.session_state.get('user_name', '')}</strong><br/>
+        <span style="font-size:0.75rem; color:#95a5a6;">{st.session_state.get('user_email', '')}</span>
+    </div>
+    """, unsafe_allow_html=True)
+    if st.button("Logout", key="logout_btn", use_container_width=True):
+        from modules.auth import logout
+        logout()
 
     st.divider()
 
